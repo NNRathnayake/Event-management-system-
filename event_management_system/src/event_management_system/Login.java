@@ -221,7 +221,7 @@ public class Login extends javax.swing.JFrame {
             return;
         }
 
-        String dbRole = LoginService.validate(un, pwdd); // must return "user" or "event manager" or null
+        String dbRole = LoginService.validate(un, pwdd); 
         if (dbRole != null && dbRole.equals(type)) {
             int userId = LoginService.getUserId(un);
 

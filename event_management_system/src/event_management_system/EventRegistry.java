@@ -85,7 +85,7 @@ showEvents(eventMap.values());
                 javax.swing.BorderFactory.createEmptyBorder(12,18,12,18)
         ));
 
-        // FIX CARD WIDTH (IMPORTANT)
+        // FIX CARD WIDTH
         card.setMaximumSize(new java.awt.Dimension(420, 120));
         card.setPreferredSize(new java.awt.Dimension(420, 120));
 

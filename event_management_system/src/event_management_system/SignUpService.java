@@ -20,21 +20,21 @@ public class SignUpService {
         PreparedStatement pst = null;
 
         try {
-            // Step 1: Connect to DB
+            //: Connect to DB
             conn = DBConnection.getConnection();
             if (conn == null) {
                 System.out.println("DB Connection failed!");
                 return false;
             }
 
-            // Step 2: Prepare SQL INSERT
+            // Prepare SQL INSERT
             String sql = "INSERT INTO users(username, password, role) VALUES (?, ?, ?)";
             pst = conn.prepareStatement(sql);
             pst.setString(1, username);
             pst.setString(2, password);
             pst.setString(3, role);
 
-            // Step 3: Execute INSERT
+            //  Execute INSERT
             int rowsInserted = pst.executeUpdate();
 
             return rowsInserted > 0; // return true if at least one row inserted
@@ -43,7 +43,7 @@ public class SignUpService {
             e.printStackTrace();
             return false;
         } finally {
-            // Step 4: Close resources
+            //  Close resources
             try { if (pst != null) pst.close(); } catch (Exception e) {}
             try { if (conn != null) conn.close(); } catch (Exception e) {}
         }

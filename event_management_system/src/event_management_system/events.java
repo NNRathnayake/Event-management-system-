@@ -30,8 +30,8 @@ private JPanel scrollPanel;
 scrollPanel.setLayout(new GridLayout(0,1,5,5));
 
 jScrollPane1.setViewportView(scrollPanel);
-         loadEventsFromDB(); // load all events from DB
-    refreshEventDisplay(); // show them in GUI
+         loadEventsFromDB(); 
+    refreshEventDisplay();
     }
 
     
@@ -66,13 +66,13 @@ jScrollPane1.setViewportView(scrollPanel);
         java.sql.Statement stmt = conn.createStatement();
         java.sql.ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
-            String id = rs.getString("event_id"); // optional but recommended
+            String id = rs.getString("event_id"); 
             String name = rs.getString("event_name");
             String place = rs.getString("place");
             int maxPeople = rs.getInt("max_people");
             String priority = rs.getString("priority");
             Event e = new Event(name, place, maxPeople, priority);
-            e.setId(id); // if your Event class has an id field
+            e.setId(id); 
             eventsList.add(e);
         }
     } catch (Exception e) {
@@ -199,11 +199,11 @@ private void openAddEventDialog() {
     if (name != null && place != null && dateStr != null && maxPeopleStr != null && priority != null) {
         try {
             int maxPeople = Integer.parseInt(maxPeopleStr);
-            java.sql.Date eventDate = java.sql.Date.valueOf(dateStr); // convert string to SQL date
+            java.sql.Date eventDate = java.sql.Date.valueOf(dateStr); 
             String generatedId = null;
 
             try (Connection conn = DBConnection.getConnection()) {
-                // Oracle way: Use RETURNING to get the generated event_id
+                
                 String sql = "INSERT INTO events (event_name, place, event_date, priority, max_people) " +
                              "VALUES (?, ?, ?, ?, ?) RETURNING event_id INTO ?";
 
@@ -213,19 +213,19 @@ private void openAddEventDialog() {
                 cs.setDate(3, eventDate);
                 cs.setString(4, priority);
                 cs.setInt(5, maxPeople);
-                cs.registerOutParameter(6, java.sql.Types.VARCHAR); // event_id is VARCHAR
+                cs.registerOutParameter(6, java.sql.Types.VARCHAR); 
 
                 cs.executeUpdate();
-                generatedId = cs.getString(6); // NOW you have the correct ID
+                generatedId = cs.getString(6); 
             }
 
-            // ✅ Add to local list and refresh GUI
+            // refresh GUI
             Event newEvent = new Event(name, place, maxPeople, priority);
-            newEvent.setId(generatedId); // important!
+            newEvent.setId(generatedId); 
             eventsList.add(newEvent);
             refreshEventDisplay();
 
-            // ✅ Log the action safely
+           
             int currentUser = Session.getInstance().getUserId();
             ActionLogger.logAction(currentUser, "ADD_EVENT", generatedId, "ACTIVE");
 
@@ -244,7 +244,7 @@ private void openAddEventDialog() {
 
 private void refreshEventDisplay() {
 
-    scrollPanel.removeAll();   // NOT jPanel1 !!!
+    scrollPanel.removeAll();   
 
     for (int i = 0; i < eventsList.size(); i++) {
 
@@ -296,11 +296,11 @@ private void deleteEvent(int index) {
     Event e = eventsList.get(index);
     int currentUser = Session.getInstance().getUserId();
 
-    // 1️⃣ Log the deletion first
+    // log first
     ActionLogger.logAction(currentUser, "DELETE_EVENT", e.getId(), "ACTIVE");
 
     boolean dbDeleted = true;
-    // 2️⃣ Delete from DB
+    
     try (Connection conn = DBConnection.getConnection()) {
         String sql = "DELETE FROM events WHERE event_id = ?";
         PreparedStatement ps = conn.prepareStatement(sql);
@@ -311,7 +311,7 @@ private void deleteEvent(int index) {
         System.out.println("DB delete failed — removing from UI anyway");
     }
 
-    // 3️⃣ Remove from UI
+    // dlt frm ui
     eventsList.remove(index);
     refreshEventDisplay();
 }

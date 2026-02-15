@@ -9,7 +9,7 @@ package event_management_system;
  
 
 public class Event {
-    private String id; // DB primary key
+    private String id; 
     private String name;
     private String place;
     private int maxPeople;

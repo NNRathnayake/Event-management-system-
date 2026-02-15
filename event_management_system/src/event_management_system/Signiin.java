@@ -199,10 +199,9 @@ public class Signiin extends javax.swing.JFrame {
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         // TODO add your handling code here:
-        String un = email.getText();                  // username/email
-String pwdd = new String(pwd.getPassword());  // password from JPasswordField
-String type = role.getSelectedItem().toString();    // role selected
-        
+        String un = email.getText();                 
+String pwdd = new String(pwd.getPassword());  
+String type = role.getSelectedItem().toString();    
       
 boolean success = SignUpService.registerUser(un, pwdd, type);
 

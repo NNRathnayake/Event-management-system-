@@ -12,7 +12,7 @@ import java.util.Stack;
  * @author USER
  */
 public class history extends javax.swing.JFrame {
-    // Add these fields at the top of your class
+    
 private Stack<JPanel> undoStack = new Stack<>();
 private Stack<JPanel> redoStack = new Stack<>();
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(history.class.getName());
@@ -87,7 +87,7 @@ private Stack<JPanel> redoStack = new Stack<>();
         // Push to undoStack
         undoStack.push(card);
 
-        // Clear redoStack (new action invalidates redo)
+        // Clear redoStack 
         redoStack.clear();
     });
 

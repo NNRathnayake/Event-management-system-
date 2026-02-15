@@ -64,7 +64,7 @@ updateStats();  // <-- Add this line
     
     
     
-    // ------------------ LOAD REQUESTS ---------------------
+    //  LOAD REQUESTS 
     private void loadRequests(String eventIdFilter) {
         registrationSet.clear();
         try (Connection conn = DBConnection.getConnection();
@@ -125,7 +125,7 @@ updateStats();  // <-- Add this line
     resultsPanel.repaint();
 }
 
-    // ------------------ ACCEPT REQUEST ---------------------
+    //  ACCEPT REQUEST 
     private void acceptRequest(int regId) {
         try (Connection conn = DBConnection.getConnection();
              java.sql.PreparedStatement ps = conn.prepareStatement(
@@ -140,7 +140,7 @@ updateStats();  // <-- Add this line
         }
     }
 
-    // ------------------ DELETE REQUEST ---------------------
+    //  DELETE REQUEST 
     private void deleteRequest(int regId) {
         try (Connection conn = DBConnection.getConnection();
              java.sql.PreparedStatement ps = conn.prepareStatement(

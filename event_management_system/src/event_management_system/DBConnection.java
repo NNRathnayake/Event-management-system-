@@ -11,8 +11,8 @@ import java.sql.DriverManager;
  */
 public class DBConnection {
 
-    private static final String URL = "jdbc:oracle:thin:@localhost:1521:XE"; // XE = default Oracle DB
-    private static final String USER = "SYSTEM"; // e.g., system
+    private static final String URL = "jdbc:oracle:thin:@localhost:1521:XE"; 
+    private static final String USER = "SYSTEM"; 
     private static final String PASS = "1234";
 
     public static Connection getConnection() {
