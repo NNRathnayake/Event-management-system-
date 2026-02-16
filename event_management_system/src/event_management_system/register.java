@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package event_management_system;
-
+//=====mergesort algorythm
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -15,7 +15,9 @@ public class register extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(register.class.getName());
 private java.util.Set<String> joinedEvents = new java.util.LinkedHashSet<>();
-    /**
+ private java.util.List<Event> eventList = new java.util.ArrayList<>();
+
+/**
      * Creates new form register
      */
     public register() {
@@ -25,39 +27,53 @@ private java.util.Set<String> joinedEvents = new java.util.LinkedHashSet<>();
 
      //LOAD EVENTS 
     private void loadEvents() {
+
         JPanel eventsPanel = new JPanel();
-        eventsPanel.setLayout(new javax.swing.BoxLayout(eventsPanel, javax.swing.BoxLayout.Y_AXIS));
+        eventsPanel.setLayout(new javax.swing.BoxLayout(eventsPanel,
+                javax.swing.BoxLayout.Y_AXIS));
         jScrollPane1.setViewportView(eventsPanel);
 
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement()) {
 
-            String sql = "SELECT * FROM events"; 
-            ResultSet rs = stmt.executeQuery(sql);
+            ResultSet rs = stmt.executeQuery("SELECT * FROM events");
 
+            eventList.clear();
             boolean anyEvents = false;
 
+            // STORE EVENTS
             while (rs.next()) {
+
                 anyEvents = true;
+
                 String id = rs.getString("event_id");
                 String name = rs.getString("event_name");
                 String place = rs.getString("place");
                 int maxPeople = rs.getInt("max_people");
                 String priority = rs.getString("priority");
 
-                if (id == null || id.isEmpty()) {
-                    System.out.println("Skipping event with empty ID: " + name);
-                    continue;
-                }
+                if (id == null || id.isEmpty()) continue;
 
                 Event ev = new Event(name, place, maxPeople, priority);
                 ev.setId(id);
 
+                eventList.add(ev);
+            }
+
+            // ⭐ SORT USING MERGE SORT
+            if (!eventList.isEmpty())
+                mergeSort(eventList, 0, eventList.size() - 1);
+
+            // DISPLAY SORTED EVENTS
+            for (Event ev : eventList) {
+
                 JPanel card = new JPanel();
-                card.setBorder(javax.swing.BorderFactory.createLineBorder(Color.GRAY, 2));
-                card.setBackground(new Color(245, 245, 250));
-                card.setMaximumSize(new java.awt.Dimension(600, 80));
-                card.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 5));
+                card.setBorder(javax.swing.BorderFactory
+                        .createLineBorder(Color.GRAY, 2));
+                card.setBackground(new Color(245,245,250));
+                card.setMaximumSize(new java.awt.Dimension(600,80));
+                card.setLayout(new java.awt.FlowLayout(
+                        java.awt.FlowLayout.LEFT,10,5));
 
                 card.add(new JLabel("📌 " + ev.getName()));
                 card.add(new JLabel("ID: " + ev.getId()));
@@ -65,29 +81,25 @@ private java.util.Set<String> joinedEvents = new java.util.LinkedHashSet<>();
                 card.add(new JLabel("Max: " + ev.getMaxPeople()));
                 card.add(new JLabel("Priority: " + ev.getPriority()));
 
-                javax.swing.JButton joinBtn = new javax.swing.JButton("Join");
+                javax.swing.JButton joinBtn =
+                        new javax.swing.JButton("Join");
 
-                // Disable if already requested
                 if (isAlreadyRequested(ev.getId())) {
                     joinBtn.setText("Requested");
                     joinBtn.setEnabled(false);
                 }
 
                 joinBtn.addActionListener(e -> {
-                    System.out.println("Attempting to join event: " + ev.getId());
-                    boolean success = sendJoinRequest(ev.getId());
-                    if (success) {
+                    boolean success =
+                            sendJoinRequest(ev.getId());
+                    if(success){
                         joinBtn.setText("Requested");
                         joinBtn.setEnabled(false);
-                        JOptionPane.showMessageDialog(register.this,
-                                "Your request for event '" + ev.getName() + "' was sent successfully!",
-                                "Request Sent", JOptionPane.INFORMATION_MESSAGE);
-                    } else {
-                        joinBtn.setText("Join");
-                        joinBtn.setEnabled(true);
-                        JOptionPane.showMessageDialog(register.this,
-                                "Failed to send request. Check console for details.",
-                                "Failed", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(
+                                register.this,
+                                "Request sent!",
+                                "Success",
+                                JOptionPane.INFORMATION_MESSAGE);
                     }
                 });
 
@@ -95,18 +107,18 @@ private java.util.Set<String> joinedEvents = new java.util.LinkedHashSet<>();
                 eventsPanel.add(card);
             }
 
-            if (!anyEvents) {
-                JOptionPane.showMessageDialog(register.this, "No events found in the database!", "Info", JOptionPane.INFORMATION_MESSAGE);
-            }
+            if (!anyEvents)
+                JOptionPane.showMessageDialog(this,
+                        "No events found");
 
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(register.this, "Error loading events:\n" + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
         }
 
         eventsPanel.revalidate();
         eventsPanel.repaint();
     }
+
 
     // chek if alr requested
    private boolean isAlreadyRequested(String eventId) {
@@ -129,6 +141,66 @@ private java.util.Set<String> joinedEvents = new java.util.LinkedHashSet<>();
     }
     return false;
 }
+   
+   
+   private int priorityValue(String p){
+        if(p.equalsIgnoreCase("High")) return 3;
+        if(p.equalsIgnoreCase("Medium")) return 2;
+        return 1;
+    }
+
+    private void mergeSort(java.util.List<Event> list,
+                           int left,
+                           int right){
+
+        if(left < right){
+
+            int mid = (left + right) / 2;
+
+            mergeSort(list,left,mid);
+            mergeSort(list,mid+1,right);
+
+            merge(list,left,mid,right);
+        }
+    }
+
+    private void merge(java.util.List<Event> list,
+                       int left,
+                       int mid,
+                       int right){
+
+        java.util.List<Event> temp =
+                new java.util.ArrayList<>();
+
+        int i=left;
+        int j=mid+1;
+
+        while(i<=mid && j<=right){
+
+            int p1 = priorityValue(
+                    list.get(i).getPriority());
+            int p2 = priorityValue(
+                    list.get(j).getPriority());
+
+            if(p1 >= p2){
+                temp.add(list.get(i));
+                i++;
+            }else{
+                temp.add(list.get(j));
+                j++;
+            }
+        }
+
+        while(i<=mid) temp.add(list.get(i++));
+        while(j<=right) temp.add(list.get(j++));
+
+        for(int k=0;k<temp.size();k++)
+            list.set(left+k,temp.get(k));
+    }
+
+   
+   
+   
 private boolean sendJoinRequest(String eventId) {
     try (Connection conn = DBConnection.getConnection();
          java.sql.PreparedStatement ps = conn.prepareStatement(
@@ -157,6 +229,10 @@ private boolean sendJoinRequest(String eventId) {
         e.printStackTrace();
         return false;
     }
+    
+    
+    
+    
 }
     /**
      * This method is called from within the constructor to initialize the form.

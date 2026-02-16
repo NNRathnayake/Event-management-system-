@@ -5,6 +5,26 @@ A complete desktop Event Management System built using *Java Swing* and **PLSQL*
 
 
 
+**Algorythms**
+     *bubblesort
+    *mergesort
+
+
+ **data structures**
+
+1️⃣ Queue
+2️⃣ LinkedList
+3️⃣ ArrayList
+4️⃣ Array (Heap Representation)
+5️⃣ LinkedHashSet
+6️⃣ Stack
+7️⃣ Binary Search Tree (BST)
+8️⃣ HashMap
+
+
+
+
+
 
 1. Clone or download the project.
 2. Open the project in **NetBeans** (or any Java IDE supporting Swing).
@@ -29,15 +49,6 @@ A complete desktop Event Management System built using *Java Swing* and **PLSQL*
 
 - 
 
- Data Structures
-
-Array - Store events in order
-Dictionary - Quick lookup by ID
-Set - Prevent duplicate registrations
-Queue - Fair FIFO processing
-Stack - Undo functionality
-Heap - Priority-based handling
-BST - Date-organized search
 
 
 

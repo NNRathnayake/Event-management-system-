@@ -17,6 +17,10 @@ import javax.swing.JScrollPane;
  *
  * @author USER
  */
+
+
+//==========bubble sort used=======
+
 public class events extends javax.swing.JFrame {
     private java.util.ArrayList<Event> eventsList = new java.util.ArrayList<>();
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(events.class.getName());
@@ -243,7 +247,7 @@ private void openAddEventDialog() {
 }
 
 private void refreshEventDisplay() {
-
+    sortEventsByPriority();
     scrollPanel.removeAll();   
 
     for (int i = 0; i < eventsList.size(); i++) {
@@ -320,7 +324,27 @@ private void deleteEvent(int index) {
 
 
 
+// Bubble Sort to sort events by priority (High > Medium > Low)
+private void sortEventsByPriority() {
+    for (int i = 0; i < eventsList.size() - 1; i++) {
+        for (int j = 0; j < eventsList.size() - i - 1; j++) {
+            if (comparePriority(eventsList.get(j).getPriority(), eventsList.get(j + 1).getPriority()) < 0) {
+                // Swap events
+                Event temp = eventsList.get(j);
+                eventsList.set(j, eventsList.get(j + 1));
+                eventsList.set(j + 1, temp);
+            }
+        }
+    }
+}
 
+// Helper to compare priority strings
+private int comparePriority(String p1, String p2) {
+    // High = 3, Medium = 2, Low = 1
+    int val1 = p1.equalsIgnoreCase("High") ? 3 : (p1.equalsIgnoreCase("Medium") ? 2 : 1);
+    int val2 = p2.equalsIgnoreCase("High") ? 3 : (p2.equalsIgnoreCase("Medium") ? 2 : 1);
+    return val1 - val2;
+}
 
 
 

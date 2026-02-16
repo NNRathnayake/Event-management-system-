@@ -39,3 +39,10 @@ class EventBST {
         }
     }
 }
+
+//store eventid , eventname , date . then insert to tree,then that insertrec is recursive function
+//If the event’s date is before the current node’s date → go left
+
+//3. inOrderTraversal(java.util.List<BSTNode> list)
+
+//This is used to get all events in chronological order.
