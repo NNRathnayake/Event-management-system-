@@ -18,6 +18,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author USER
@@ -34,166 +37,182 @@ private java.util.Queue<Registration> registrationQueue = new java.util.LinkedLi
         loadQueue();
     }
 
-    
-    
-    private void loadQueue() {
-    registrationQueue.clear(); // clear old data
-    JPanel queuePanel = new JPanel();
-    queuePanel.setLayout(new javax.swing.BoxLayout(queuePanel, javax.swing.BoxLayout.Y_AXIS));
-    jScrollPane1.setViewportView(queuePanel);
+     private void loadQueue() {
+        registrationQueue.clear();
+        JPanel queuePanel = new JPanel();
+        queuePanel.setLayout(new javax.swing.BoxLayout(queuePanel, javax.swing.BoxLayout.Y_AXIS));
+        jScrollPane1.setViewportView(queuePanel);
 
-    try (Connection conn = DBConnection.getConnection();
-         Statement stmt = conn.createStatement()) {
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
 
-        String sql = "SELECT user_id, event_id, status, request_time " +
-                     "FROM event_registrations " +
-                     "WHERE status='Requested' " +
-                     "ORDER BY request_time ASC"; // first come, first served
+            String sql = "SELECT user_id, event_id, status, request_time " +
+                         "FROM event_registrations " +
+                         "WHERE status='Requested'";
+            ResultSet rs = stmt.executeQuery(sql);
 
-        ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()) {
+                int userId = rs.getInt("user_id");
+                String eventId = rs.getString("event_id");
+                String status = rs.getString("status");
+                java.sql.Timestamp time = rs.getTimestamp("request_time");
 
-        while (rs.next()) {
-            int userId = rs.getInt("user_id");
-            String eventId = rs.getString("event_id");
-            String status = rs.getString("status");
-            java.sql.Timestamp time = rs.getTimestamp("request_time");
+                Registration reg = new Registration(userId, eventId, status, time);
+                registrationQueue.add(reg);
+            }
 
-            Registration reg = new Registration(userId, eventId, status, time);
-            registrationQueue.add(reg);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error loading queue:\n" + e.getMessage(),
+                                          "Database Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
-    } catch (Exception e) {
-        e.printStackTrace();
-        JOptionPane.showMessageDialog(this, "Error loading queue:\n" + e.getMessage(),
-                                      "Database Error", JOptionPane.ERROR_MESSAGE);
-        return;
+        // Convert queue to list for sorting
+        List<Registration> regList = new ArrayList<>(registrationQueue);
+
+        // --- QUICK SORT ---
+        quickSort(regList, 0, regList.size() - 1);
+
+        // --- MOVING AVERAGE (window = 5 mins for demo) ---
+        double avgWait = calculateMovingAverage(regList, 5);
+        avg_wait_time.setText(String.format("Avg Wait: %.2f mins", avgWait));
+
+        // Show top 5 registrations
+        int count = 0;
+        for (Registration reg : regList) {
+            if (count < 5) {
+                JPanel topCard = createRegistrationCard(reg);
+                queuePanel.add(topCard);
+                count++;
+            } else {
+                break;
+            }
+        }
+
+        tot_requests.setText("Total Requests: " + regList.size());
+        queuePanel.revalidate();
+        queuePanel.repaint();
     }
 
-    // update summary stats
-    tot_requests.setText("Total Requests: " + registrationQueue.size());
-    avg_wait_time.setText("Avg Wait: " + calculateAverageWait() + " mins");
-
-    // show top 5
-    int count = 0;
-    for (Registration reg : registrationQueue) {
-        if (count < 5) {
-            JPanel topCard = createRegistrationCard(reg);
-            queuePanel.add(topCard);
-            count++;
-        } else {
-            break;
+    /**
+     * QuickSort by requestTime
+     */
+    private void quickSort(List<Registration> list, int low, int high) {
+        if (low < high) {
+            int pi = partition(list, low, high);
+            quickSort(list, low, pi - 1);
+            quickSort(list, pi + 1, high);
         }
     }
 
-    queuePanel.revalidate();
-    queuePanel.repaint();
-}
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    private long calculateAverageWait() {
-    if (registrationQueue.isEmpty()) return 0;
-    long totalMinutes = 0;
-    java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
-    for (Registration reg : registrationQueue) {
-        long diffMillis = now.getTime() - reg.getRequestTime().getTime();
-        totalMinutes += diffMillis / 60000; // convert to minutes
+    private int partition(List<Registration> list, int low, int high) {
+        Registration pivot = list.get(high);
+        int i = low - 1;
+
+        for (int j = low; j < high; j++) {
+            if (list.get(j).getRequestTime().before(pivot.getRequestTime())) {
+                i++;
+                // swap
+                Registration temp = list.get(i);
+                list.set(i, list.get(j));
+                list.set(j, temp);
+            }
+        }
+
+        // swap pivot
+        Registration temp = list.get(i + 1);
+        list.set(i + 1, list.get(high));
+        list.set(high, temp);
+
+        return i + 1;
     }
-    return totalMinutes / registrationQueue.size();
-}
-    
-    
-    
+
+    /**
+     * Moving Average of wait times in minutes
+     * windowSize = last N registrations to average
+     */
+    private double calculateMovingAverage(List<Registration> list, int windowSize) {
+        if (list.isEmpty()) return 0;
+        long nowMillis = System.currentTimeMillis();
+        List<Long> waitTimes = new ArrayList<>();
+        for (Registration reg : list) {
+            long diff = nowMillis - reg.getRequestTime().getTime();
+            waitTimes.add(diff / 60000); // convert to minutes
+        }
+
+        int n = waitTimes.size();
+        long sum = 0;
+        int start = Math.max(0, n - windowSize);
+        for (int i = start; i < n; i++) sum += waitTimes.get(i);
+
+        return sum / (double) Math.min(windowSize, n);
+    }
+
+    /**
+     * Create a card panel for a registration
+     */
     private JPanel createRegistrationCard(Registration reg) {
-    JPanel card = new JPanel();
-    card.setBorder(javax.swing.BorderFactory.createLineBorder(Color.GRAY, 2));
-    card.setBackground(new Color(245, 245, 250));
-    card.setMaximumSize(new java.awt.Dimension(600, 80));
-    card.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 5));
+        JPanel card = new JPanel();
+        card.setBorder(javax.swing.BorderFactory.createLineBorder(Color.GRAY, 2));
+        card.setBackground(new Color(245, 245, 250));
+        card.setMaximumSize(new java.awt.Dimension(600, 80));
+        card.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 5));
 
-    card.add(new JLabel("User ID: " + reg.getUserId()));
-    card.add(new JLabel("Event ID: " + reg.getEventId()));
-    card.add(new JLabel("Status: " + reg.getStatus()));
-    card.add(new JLabel("Time: " + reg.getRequestTime()));
-    
-    
-    
-    
-    
-    JButton approveBtn = new JButton("Approve");
-JButton rejectBtn = new JButton("Reject");
+        card.add(new JLabel("User ID: " + reg.getUserId()));
+        card.add(new JLabel("Event ID: " + reg.getEventId()));
+        card.add(new JLabel("Status: " + reg.getStatus()));
+        card.add(new JLabel("Time: " + reg.getRequestTime()));
 
-// Approve action
-approveBtn.addActionListener(e -> {
-    if (updateRegistrationStatus(reg, "Approved")) {
-        JOptionPane.showMessageDialog(this,
-            "Registration approved for User " + reg.getUserId(),
-            "Success", JOptionPane.INFORMATION_MESSAGE);
-        
-        loadQueue(); // refresh queue
+        JButton approveBtn = new JButton("Approve");
+        JButton rejectBtn = new JButton("Reject");
+
+        approveBtn.addActionListener(e -> {
+            if (updateRegistrationStatus(reg, "Approved")) {
+                JOptionPane.showMessageDialog(this,
+                        "Registration approved for User " + reg.getUserId(),
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadQueue();
+            }
+        });
+
+        rejectBtn.addActionListener(e -> {
+            if (updateRegistrationStatus(reg, "Rejected")) {
+                JOptionPane.showMessageDialog(this,
+                        "Registration rejected for User " + reg.getUserId(),
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadQueue();
+            }
+        });
+
+        card.add(approveBtn);
+        card.add(rejectBtn);
+
+        return card;
     }
-});
 
-// Reject action
-rejectBtn.addActionListener(e -> {
-    if (updateRegistrationStatus(reg, "Rejected")) {
-        JOptionPane.showMessageDialog(this,
-            "Registration rejected for User " + reg.getUserId(),
-            "Success", JOptionPane.INFORMATION_MESSAGE);
-       
-        loadQueue(); // refresh queue
-    }
-});
-
-card.add(approveBtn);
-card.add(rejectBtn);
-    
-    
-    
-    
-
-    return card;
-}
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    /**
+     * Update status in database
+     */
     private boolean updateRegistrationStatus(Registration reg, String newStatus) {
-    try (Connection conn = DBConnection.getConnection();
-         PreparedStatement ps = conn.prepareStatement(
-             "UPDATE event_registrations SET status=? WHERE user_id=? AND event_id=?")) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "UPDATE event_registrations SET status=? WHERE user_id=? AND event_id=?")) {
 
-        ps.setString(1, newStatus);
-        ps.setInt(2, reg.getUserId());
-        ps.setString(3, reg.getEventId());
+            ps.setString(1, newStatus);
+            ps.setInt(2, reg.getUserId());
+            ps.setString(3, reg.getEventId());
 
-        int rows = ps.executeUpdate();
-        return rows > 0;
+            int rows = ps.executeUpdate();
+            return rows > 0;
 
-    } catch (Exception ex) {
-        ex.printStackTrace();
-        JOptionPane.showMessageDialog(this, "Error updating status:\n" + ex.getMessage(),
-                                      "Database Error", JOptionPane.ERROR_MESSAGE);
-        return false;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error updating status:\n" + ex.getMessage(),
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
     }
-}
-    
     
     
     /**

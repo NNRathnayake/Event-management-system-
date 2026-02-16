@@ -37,6 +37,33 @@ jScrollPane1.setViewportView(scrollPanel);
         List<Event> events = loadEvents();
          displayHeapLine(events);
     }
+    
+    
+    
+    
+    
+    
+    // ================= HEAP SORT ALGORITHM =================
+
+private void heapSort(Event[] arr) {
+
+    int n = arr.length;
+
+    // Build max heap first
+    buildMaxHeap(arr);
+
+    // Extract elements from heap one by one
+    for (int i = n - 1; i > 0; i--) {
+
+        // Swap root with last element
+        Event temp = arr[0];
+        arr[0] = arr[i];
+        arr[i] = temp;
+
+        // Heapify reduced heap
+        maxHeapify(arr, i, 0);
+    }
+}
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -177,9 +204,10 @@ jScrollPane1.setViewportView(scrollPanel);
   private void displayHeapLine(List<Event> events) {
     scrollPanel.removeAll();
 
-    // Build max heap
-    Event[] heap = events.toArray(new Event[0]);
-    buildMaxHeap(heap);
+   Event[] heap = events.toArray(new Event[0]);
+
+// Run Heap Sort Algorithm
+heapSort(heap);
 
     // Display horizontally
     for (Event ev : heap) {

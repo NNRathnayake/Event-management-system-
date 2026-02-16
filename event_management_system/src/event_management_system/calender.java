@@ -14,6 +14,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import java.sql.Statement;
+import java.util.List;
 /**
  *
  * @author USER
@@ -38,31 +39,43 @@ public class calender extends javax.swing.JFrame {
     
     
     
-  private void loadEvents() {
-    EventBST bst = new EventBST();
+ private void loadEvents() {
+        EventBST bst = new EventBST();
 
-    try (Connection conn = DBConnection.getConnection();
-         Statement stmt = conn.createStatement()) {
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT event_id, event_name, event_date FROM events")) {
 
-        ResultSet rs = stmt.executeQuery("SELECT event_id, event_name, event_date FROM events");
-        while (rs.next()) {
-            String eventId = rs.getString("event_id");
-            String eventName = rs.getString("event_name");
-            java.sql.Date eventDate = rs.getDate("event_date");
-            bst.insert(eventId, eventName, eventDate);
+            while (rs.next()) {
+                String eventId = rs.getString("event_id");
+                String eventName = rs.getString("event_name");
+                java.sql.Date eventDate = rs.getDate("event_date");
+                bst.insert(eventId, eventName, eventDate);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
-    } catch (Exception e) {
-        e.printStackTrace();
+        // ====== DFS Traversal Display in GUI ======
+        JPanel dfsPanel = new JPanel();
+        dfsPanel.setLayout(new GridLayout(0, 1, 5, 5)); // vertical list with spacing
+
+        // Use InOrder DFS for chronological order
+        List<EventBST.BSTNode> events = bst.inOrderTraversal();
+        for (EventBST.BSTNode node : events) {
+            JLabel label = new JLabel(node.toString());
+            dfsPanel.add(label);
+        }
+
+        // Optional: also print DFS to console
+        System.out.println("DFS InOrder:");
+        bst.dfsInOrder();
+
+        // Add panel to scroll pane
+        jScrollPane1.setViewportView(dfsPanel);
     }
 
-    // Use custom BSTPanel
-    BSTPanel treePanel = new BSTPanel(bst.root);
-    jScrollPane1.setViewportView(treePanel);
-}
-    
-    
-    
     
     
     

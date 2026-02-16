@@ -6,8 +6,13 @@ A complete desktop Event Management System built using *Java Swing* and **PLSQL*
 
 
 **Algorythms**
-     *bubblesort
+    *bubblesort
     *mergesort
+    *quick sort
+    *moving average
+    *heapsort 
+    *depthfirst 
+
 
 
  **data structures**
