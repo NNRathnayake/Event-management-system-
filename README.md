@@ -52,7 +52,7 @@ A complete desktop Event Management System built using *Java Swing* and **PLSQL*
 - Register for events  
 - Cancel registrations
 
-- 
+  
 
 
 
